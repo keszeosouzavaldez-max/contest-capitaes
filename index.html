@@ -219,6 +219,9 @@ section{margin-top:28px}
 .lan-sdr-tem{font-size:9.5px;font-weight:900;color:#6fbf8f;white-space:nowrap;text-align:center;min-width:58px;letter-spacing:.04em}
 .lan-sdr-tem.ok{color:#ffc43d}
 .lan-hint{font-size:9.5px;color:#5a6580;margin:2px 0 8px;letter-spacing:.04em}
+.modo-sub{border-color:#ff5a3d!important;color:#ff7a66!important}
+.lan-sdr-opps.modo-sub{border-color:#ff5a3d}
+.lan-sdr-tem.sub{color:#ff7a66}
 .lan-pontos{font-size:14px;color:var(--tx2)}
 .lan-pontos b{color:var(--alerta);font-size:22px;margin-left:4px}
 .regra-real{color:#8b93a8;font-size:12px}
@@ -321,7 +324,7 @@ footer{margin-top:44px;text-align:center;color:var(--tx2);font-size:12px}
 </label>
 <div id="lan-sdrs"></div>
 <div class="lan-hint">O valor lançado SOMA com o total que o SDR já tem — a prévia ao lado do nome mostra o resultado.</div>
-<div><button class="btn sec" id="lan-add" type="button">+ Adicionar SDR</button></div>
+<div><button class="btn sec" id="lan-add" type="button">+ Adicionar SDR</button> <button class="btn sec" id="lan-modo" type="button">Corrigir OPPs (subtrair)</button></div>
 <div class="lan-grid3">
 <label>Atrasados (pessoas · −5)<input id="lan-atrasos" type="number" min="0" inputmode="numeric" value="0"></label>
 <label>Faltas (pessoas · −10)<input id="lan-faltas" type="number" min="0" inputmode="numeric" value="0"></label>
@@ -680,10 +683,20 @@ row.querySelector('.lan-del').addEventListener('click', () => { row.remove(); la
 row.querySelectorAll('input').forEach(i => i.addEventListener('input', lanUpdate));
 $('lan-sdrs').appendChild(row);
 }
+var lanModo = 'add';
+function lanSetModo(m){
+lanModo = m;
+const b = $('lan-modo');
+if (b){ b.textContent = m === 'add' ? 'Corrigir OPPs (subtrair)' : 'SUBTRAÇÃO ATIVA — toque p/ desligar'; b.classList.toggle('modo-sub', m === 'sub'); }
+const h = $('lan-hint');
+if (h) h.textContent = m === 'add' ? 'O valor lançado SOMA com o total que o SDR já tem — a prévia ao lado do nome mostra o resultado.' : 'MODO CORREÇÃO: o valor digitado será SUBTRAÍDO do total de cada SDR. Use apenas para consertar erro.';
+document.querySelectorAll('#lan-sdrs .lan-sdr-opps').forEach(i => i.classList.toggle('modo-sub', m === 'sub'));
+lanUpdate();
+}
 function lanSdrRows(){
 return [...document.querySelectorAll('#lan-sdrs .lan-sdr')].map(row => ({
 nome: row.querySelector('.lan-sdr-nome').value.trim(),
-opps: parseInt(row.querySelector('.lan-sdr-opps').value || '0', 10) || 0
+opps: (lanModo === 'sub' ? -1 : 1) * (parseInt(row.querySelector('.lan-sdr-opps').value || '0', 10) || 0)
 })).filter(x => x.nome);
 }
 function sdrTotal(nome){
@@ -696,11 +709,13 @@ function lanRefreshTem(){
 document.querySelectorAll('#lan-sdrs .lan-sdr').forEach(row => {
 const b = row.querySelector('.lan-sdr-tem'); if (!b) return;
 const nome = row.querySelector('.lan-sdr-nome').value.trim();
-const v = parseInt(row.querySelector('.lan-sdr-opps').value || '0', 10) || 0;
+const raw = parseInt(row.querySelector('.lan-sdr-opps').value || '0', 10) || 0;
+const v = lanModo === 'sub' ? -raw : raw;
 const tot = sdrTotal(nome);
-if (tot === null){ b.textContent = ''; b.classList.remove('ok'); return; }
-if (v > 0){ b.textContent = tot + ' + ' + v + ' = ' + (tot + v); b.classList.add('ok'); }
-else { b.textContent = 'tem ' + tot; b.classList.remove('ok'); }
+if (tot === null){ b.textContent = ''; b.classList.remove('ok'); b.classList.remove('sub'); return; }
+if (v > 0){ b.textContent = tot + ' + ' + v + ' = ' + (tot + v); b.classList.add('ok'); b.classList.remove('sub'); }
+else if (v < 0){ b.textContent = tot + ' − ' + Math.abs(v) + ' = ' + (tot + v); b.classList.add('sub'); b.classList.remove('ok'); }
+else { b.textContent = 'tem ' + tot; b.classList.remove('ok'); b.classList.remove('sub'); }
 });
 }
 function lanUpdate(){
@@ -816,6 +831,10 @@ sdrs: rows.map(x => ({ nome: x.nome, opps: x.opps || 0 }))
 function lanSend(){
 const btn = $('lan-send');
 if (!dadosCarregados){ btn.textContent = '⚠️ Espera os dados do dia carregarem e tenta de novo'; setTimeout(function(){ btn.textContent = '🚀 Lançar no contest'; }, 4000); return; }
+if (lanModo === 'sub'){
+const neg = lanSdrRows().filter(r => (sdrTotal(r.nome) || 0) + r.opps < 0);
+if (neg.length && !confirm('Atenção: ' + neg.map(r => r.nome).join(', ') + ' ficaria com OPPs NEGATIVOS. Confirmar mesmo assim?')) return;
+}
 const payload = JSON.stringify(montaPayload());
 if (window.google && google.script && google.script.run){
 btn.disabled = true; btn.textContent = '🚀 Lançando...';
@@ -846,7 +865,7 @@ const rows = lanSdrRows();
 const num = id => +$(id).value || 0;
 const hoje = new Date();
 const label = String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMonth() + 1).padStart(2, '0');
-return 'CONTEST ' + label + ' — ' + t.nome + ' (lançamento)\n' +
+return 'CONTEST ' + label + ' — ' + t.nome + (lanModo === 'sub' ? ' (CORREÇÃO — REMOÇÃO DE OPPs)' : ' (lançamento)') + '\n' +
 'OPPs: ' + rows.map(x => (x.nome || 'SDR') + ' ' + (x.opps || 0)).join(', ') + '\n' +
 'Atrasados: ' + num('lan-atrasos') + ' · Faltas: ' + num('lan-faltas') + ' · GRID: ' + num('lan-grid') + '\n' +
 'Forecast: ' + num('lan-forecast') + ' · OPPs plan: ' + num('lan-oppsplan') + ' · Corrida: ' + num('lan-corrida') + ' · Meta batida: ' + num('lan-meta');
@@ -887,6 +906,7 @@ $(id).addEventListener('input', lanUpdate); $(id).addEventListener('change', lan
 });
 $('lan-time').addEventListener('change', renderSdrRows);
 $('lan-add').addEventListener('click', () => { addSdrRow(); lanUpdate(); });
+$('lan-modo').addEventListener('click', () => lanSetModo(lanModo === 'add' ? 'sub' : 'add'));
 $('lan-send').addEventListener('click', lanSend);
 lanUpdate();
 setInterval(lanUpdate, 1000);
@@ -912,7 +932,7 @@ if (cache && ((cache.dias||[]).length || (cache.sdrDiario||[]).length || (cache.
 // PWA — instalação como app no celular (GitHub Pages serve por https)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
 (function(){
-var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.5');
+var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.6');
 var st = document.createElement('style'); st.textContent = '#rodape::after{content:" · v" attr(data-v)}'; document.head.appendChild(st);
 window.addEventListener('load', function () {
 navigator.serviceWorker.register('sw.js').then(function (reg) {
@@ -923,7 +943,7 @@ setInterval(function () { try { reg.update(); } catch (e) {} }, 300000);
 navigator.serviceWorker.addEventListener('controllerchange', function () { if (!window._swRecarregou) { window._swRecarregou = true; location.reload(); } });
 setInterval(function () {
 if (window._swRecarregou) return;
-fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.5') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
+fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.6') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
 }, 300000);
 })();
 }

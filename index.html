@@ -288,7 +288,7 @@ footer{margin-top:44px;text-align:center;color:var(--tx2);font-size:12px}
 <div class="lan-actions">
 <button class="btn" id="lan-send" type="button">🚀 Lançar no contest</button>
 <button class="btn sec" id="lan-copy" type="button">📋 Copiar resumo</button>
-<span class="lan-hint">🚀 Lança direto na planilha — a frente de batalha atualiza sozinha em segundos</span>
+<span class="lan-hint">🚀 Lança direto na planilha — os valores SOMAM com o que o time já tem hoje</span>
 </div>
 </div>
 </section>
@@ -604,28 +604,54 @@ s.onerror = function () { delete window[cb]; $('rodape').textContent = '⚠️ S
 document.head.appendChild(s);
 setTimeout(function () { if (window[cb]) { delete window[cb]; } }, 15000);
 }
+function mergeDoDia(t, rows, num){
+const hoje = new Date();
+const hojeISO = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
+const dia = (C.dias || []).find(d => d.data === hojeISO);
+const antigo = (dia && dia.porTime && dia.porTime[t.id]) || {};
+const antigos = {};
+(C.sdrDiario || []).forEach(x => { if (x.data === hojeISO && x.time === t.id && x.sdr) antigos[x.sdr] = (antigos[x.sdr] || 0) + (x.opps || 0); });
+const somado = {};
+rows.forEach(x => { if (x.nome) somado[x.nome] = (antigos[x.nome] || 0) + (x.opps || 0); });
+Object.keys(antigos).forEach(n => { if (!(n in somado)) somado[n] = antigos[n]; });
+const sdrs = Object.keys(somado).map(n => ({ nome: n, opps: somado[n] || 0 }));
+const registro = {
+opps: sdrs.reduce((s, x) => s + (x.opps || 0), 0),
+atrasos: (antigo.atrasos || 0) + num('lan-atrasos'),
+faltas: (antigo.faltas || 0) + num('lan-faltas'),
+grid: (antigo.grid || 0) + num('lan-grid'),
+forecast: (antigo.forecast || 0) + num('lan-forecast'),
+oppsPlan: (antigo.oppsPlan || 0) + num('lan-oppsplan'),
+corrida: (antigo.corrida || 0) + num('lan-corrida'),
+meta: (antigo.meta || 0) + num('lan-meta'),
+menos3: sdrs.filter(x => x.opps > 0 && x.opps < 3).length
+};
+return { hojeISO: hojeISO, registro: registro, sdrs: sdrs };
+}
 function montaPayload(){
 const t = C.times.find(x => x.id === $('lan-time').value) || C.times[0];
 const hoje = new Date();
 const rows = lanSdrRows();
 const num = id => +$(id).value || 0;
+const m = mergeDoDia(t, rows, num);
 return {
-data: hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0'),
+data: m.hojeISO,
 label: String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMonth() + 1).padStart(2, '0'),
 time: t.id,
-registro: { opps: rows.reduce((s, x) => s + (x.opps || 0), 0), atrasos: num('lan-atrasos'), faltas: num('lan-faltas'), grid: num('lan-grid'), forecast: num('lan-forecast'), oppsPlan: num('lan-oppsplan'), corrida: num('lan-corrida'), meta: num('lan-meta'), menos3: rows.filter(x => x.opps > 0 && x.opps < 3).length },
-sdrs: rows.map(x => ({ nome: x.nome, opps: x.opps || 0 }))
+registro: m.registro,
+sdrs: m.sdrs
 };
 }
 function lanSend(){
 const btn = $('lan-send');
-const payload = JSON.stringify(montaPayload());
+const m = montaPayload();
+const payload = JSON.stringify(m);
 if (window.google && google.script && google.script.run){
 btn.disabled = true; btn.textContent = '🚀 Lançando...';
 try{
 google.script.run
 .withSuccessHandler(function(){
-btn.textContent = '✅ Lançado no contest!';
+btn.textContent = '✅ Somado! Total do dia: ' + m.registro.opps + ' OPPs';
 setTimeout(function(){ btn.textContent = '🚀 Lançar no contest'; btn.disabled = false; }, 3000);
 })
 .withFailureHandler(function(err){
@@ -640,7 +666,7 @@ setTimeout(function(){ btn.textContent = '🚀 Lançar no contest'; btn.disabled
 return;
 }
 window.open(APPS_SCRIPT_URL + '?action=lanca&payload=' + encodeURIComponent(payload), '_blank');
-btn.textContent = '✅ Lançado! Fecha a aba aberta';
+btn.textContent = '✅ Somado! Dia: ' + m.registro.opps + ' OPPs · fecha a aba aberta';
 setTimeout(() => { btn.textContent = '🚀 Lançar no contest'; }, 3500);
 }
 function resumoLancamento(){
@@ -649,10 +675,11 @@ const rows = lanSdrRows();
 const num = id => +$(id).value || 0;
 const hoje = new Date();
 const label = String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMonth() + 1).padStart(2, '0');
-return 'CONTEST ' + label + ' — ' + t.nome + '\n' +
-'OPPs: ' + rows.map(x => (x.nome || 'SDR') + ' ' + (x.opps || 0)).join(', ') + '\n' +
-'Atrasados: ' + num('lan-atrasos') + ' · Faltas: ' + num('lan-faltas') + ' · GRID: ' + num('lan-grid') + '\n' +
-'Forecast: ' + num('lan-forecast') + ' · OPPs plan: ' + num('lan-oppsplan') + ' · Corrida: ' + num('lan-corrida') + ' · Meta batida: ' + num('lan-meta');
+const m = mergeDoDia(t, rows, num);
+return 'CONTEST ' + label + ' — ' + t.nome + ' (acumulado do dia)\n' +
+'OPPs: ' + (m.sdrs.filter(x => x.opps > 0).map(x => x.nome + ' ' + x.opps).join(', ') || '(nenhum)') + '\n' +
+'Atrasados: ' + m.registro.atrasos + ' · Faltas: ' + m.registro.faltas + ' · GRID: ' + m.registro.grid + '\n' +
+'Forecast: ' + m.registro.forecast + ' · OPPs plan: ' + m.registro.oppsPlan + ' · Corrida: ' + m.registro.corrida + ' · Meta batida: ' + m.registro.meta;
 }
 async function lanCopy(){
 const btn = $('lan-copy');

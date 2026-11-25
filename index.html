@@ -215,7 +215,10 @@ section{margin-top:28px}
 .lan-card label{display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--tx2)}
 .lan-card input,.lan-card select,.lan-card textarea{background:#0f1526;border:1px solid var(--line);color:var(--tx);border-radius:8px;padding:10px;font-size:16px;font-family:inherit;width:100%}
 .lan-grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:10px}
-.lan-sdr{display:grid;grid-template-columns:1fr 90px 34px;gap:8px;align-items:center;margin-bottom:8px}
+.lan-sdr{display:grid;grid-template-columns:1fr auto 90px 34px;gap:8px;align-items:center;margin-bottom:8px}
+.lan-sdr-tem{font-size:9.5px;font-weight:900;color:#6fbf8f;white-space:nowrap;text-align:center;min-width:58px;letter-spacing:.04em}
+.lan-sdr-tem.ok{color:#ffc43d}
+.lan-hint{font-size:9.5px;color:#5a6580;margin:2px 0 8px;letter-spacing:.04em}
 .lan-pontos{font-size:14px;color:var(--tx2)}
 .lan-pontos b{color:var(--alerta);font-size:22px;margin-left:4px}
 .regra-real{color:#8b93a8;font-size:12px}
@@ -317,6 +320,7 @@ footer{margin-top:44px;text-align:center;color:var(--tx2);font-size:12px}
 <select id="lan-time"></select>
 </label>
 <div id="lan-sdrs"></div>
+<div class="lan-hint">O valor lançado SOMA com o total que o SDR já tem — a prévia ao lado do nome mostra o resultado.</div>
 <div><button class="btn sec" id="lan-add" type="button">+ Adicionar SDR</button></div>
 <div class="lan-grid3">
 <label>Atrasados (pessoas · −5)<input id="lan-atrasos" type="number" min="0" inputmode="numeric" value="0"></label>
@@ -671,7 +675,7 @@ $('regras').innerHTML = (C.regras||[]).map(r => `<div class="regra"><span class=
 }
 function addSdrRow(nome, opps){
 const row = document.createElement('div'); row.className = 'lan-sdr';
-row.innerHTML = `<input class="lan-sdr-nome" placeholder="Nome do SDR" value="${nome || ''}"><input class="lan-sdr-opps" type="number" min="0" inputmode="numeric" placeholder="OPPs" value="${opps != null ? opps : ''}"><button class="lan-del" type="button" title="Remover">×</button>`;
+row.innerHTML = `<input class="lan-sdr-nome" placeholder="Nome do SDR" value="${nome || ''}"><span class="lan-sdr-tem"></span><input class="lan-sdr-opps" type="number" min="0" inputmode="numeric" placeholder="OPPs" value="${opps != null ? opps : ''}" title="Some com o que ele já tem"><button class="lan-del" type="button" title="Remover">×</button>`;
 row.querySelector('.lan-del').addEventListener('click', () => { row.remove(); lanUpdate(); });
 row.querySelectorAll('input').forEach(i => i.addEventListener('input', lanUpdate));
 $('lan-sdrs').appendChild(row);
@@ -682,6 +686,23 @@ nome: row.querySelector('.lan-sdr-nome').value.trim(),
 opps: parseInt(row.querySelector('.lan-sdr-opps').value || '0', 10) || 0
 })).filter(x => x.nome);
 }
+function sdrTotal(nome){
+const n = String(nome || '').trim().toLowerCase();
+if (!n) return null;
+const inicio = (C.temporada && C.temporada.inicio) || '';
+return (C.sdrDiario || []).filter(s => String(s.sdr || '').trim().toLowerCase() === n && (!inicio || String(s.data || '').slice(0, 10) >= inicio)).reduce((s, x) => s + (+x.opps || 0), 0);
+}
+function lanRefreshTem(){
+document.querySelectorAll('#lan-sdrs .lan-sdr').forEach(row => {
+const b = row.querySelector('.lan-sdr-tem'); if (!b) return;
+const nome = row.querySelector('.lan-sdr-nome').value.trim();
+const v = parseInt(row.querySelector('.lan-sdr-opps').value || '0', 10) || 0;
+const tot = sdrTotal(nome);
+if (tot === null){ b.textContent = ''; b.classList.remove('ok'); return; }
+if (v > 0){ b.textContent = tot + ' + ' + v + ' = ' + (tot + v); b.classList.add('ok'); }
+else { b.textContent = 'tem ' + tot; b.classList.remove('ok'); }
+});
+}
 function lanUpdate(){
 const rows = lanSdrRows();
 const a = +$('lan-atrasos').value || 0, ft = +$('lan-faltas').value || 0, g = +$('lan-grid').value || 0;
@@ -690,6 +711,7 @@ const mt = +$('lan-meta').value || 0;
 const m3 = rows.filter(r => r.opps > 0 && r.opps < 3).length;
 const opps = rows.reduce((s, r) => s + (r.opps || 0), 0);
 $('lan-pts').textContent = opps - 5*a - 10*ft + 2*g + 2*fc + 3*op + 2*ce + 2*mt - m3;
+lanRefreshTem();
 }
 function lanMensagem(){
 const t = C.times.find(x => x.id === $('lan-time').value) || C.times[0];
@@ -890,7 +912,7 @@ if (cache && ((cache.dias||[]).length || (cache.sdrDiario||[]).length || (cache.
 // PWA — instalação como app no celular (GitHub Pages serve por https)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
 (function(){
-var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.4');
+var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.5');
 var st = document.createElement('style'); st.textContent = '#rodape::after{content:" · v" attr(data-v)}'; document.head.appendChild(st);
 window.addEventListener('load', function () {
 navigator.serviceWorker.register('sw.js').then(function (reg) {
@@ -901,7 +923,7 @@ setInterval(function () { try { reg.update(); } catch (e) {} }, 300000);
 navigator.serviceWorker.addEventListener('controllerchange', function () { if (!window._swRecarregou) { window._swRecarregou = true; location.reload(); } });
 setInterval(function () {
 if (window._swRecarregou) return;
-fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.4') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
+fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.5') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
 }, 300000);
 })();
 }

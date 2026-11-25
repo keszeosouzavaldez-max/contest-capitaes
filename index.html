@@ -12,6 +12,19 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://keszeosouzavaldez-max.github.io/contest-capitaes/">
+<meta property="og:title" content="⚔️ Contest dos Capitães — Guerra Fria">
+<meta property="og:description" content="Daniel (Mamba Force) x Enzo (Os Implacáveis) · quem soma mais pontos no fim do mês domina">
+<meta property="og:image" content="https://keszeosouzavaldez-max.github.io/contest-capitaes/og-image.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:type" content="image/jpeg">
+<meta property="og:locale" content="pt_BR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="⚔️ Contest dos Capitães — Guerra Fria">
+<meta name="twitter:description" content="Daniel (Mamba Force) x Enzo (Os Implacáveis) · quem soma mais pontos no fim do mês domina">
+<meta name="twitter:image" content="https://keszeosouzavaldez-max.github.io/contest-capitaes/og-image.jpg">
 <title>Contest dos Capitães — Guerra Fria</title>
 <style>
 :root{
@@ -306,7 +319,7 @@ window.CONTEST = {
     { p: "+1", t: "Baixa Confirmada", d: "cada OPP do dia vale 1 ponto" },
     { p: "-5", t: "Marcha Atrasada", d: "ignorante que chega atrasado · −5 por atraso" },
     { p: "-10", t: "Deserção - Abandono", d: "ignorante que faltou no dia · −10 por falta" },
-    { p: "-1", t: "Munição Insuficiente", d: "ignorante que faz menos de 3 OPPs no dia · −1" },
+    { p: "-1", t: "Munição Insuficiente", d: "ignorante que fez 1 ou 2 OPPs no dia · −1 · sem OPPs lançados (0) não desconta" },
     { p: "+2", t: "Trincheira Segura", d: "terminar o dia dentro do GRID · +2 por soldado" },
     { p: "+2", t: "Esquadrão Blindado", d: "estar dentro da Corrida da eficiência · +2 por soldado" },
     { p: "+2", t: "Bandeira Içada", d: "meta do mês batida · +2 por pessoa, por dia, todos os dias" }
@@ -532,7 +545,7 @@ const rows = lanSdrRows();
 const a = +$('lan-atrasos').value || 0, ft = +$('lan-faltas').value || 0, g = +$('lan-grid').value || 0;
 const fc = +$('lan-forecast').value || 0, op = +$('lan-oppsplan').value || 0, ce = +$('lan-corrida').value || 0;
 const mt = +$('lan-meta').value || 0;
-const m3 = rows.filter(r => r.opps < 3).length;
+const m3 = rows.filter(r => r.opps > 0 && r.opps < 3).length;
 const opps = rows.reduce((s, r) => s + (r.opps || 0), 0);
 $('lan-pts').textContent = opps - 5*a - 10*ft + 2*g + 2*fc + 3*op + 2*ce + 2*mt - m3;
 }
@@ -542,7 +555,7 @@ const rows = lanSdrRows();
 const a = +$('lan-atrasos').value || 0, ft = +$('lan-faltas').value || 0, g = +$('lan-grid').value || 0;
 const fc = +$('lan-forecast').value || 0, op = +$('lan-oppsplan').value || 0, ce = +$('lan-corrida').value || 0;
 const mt = +$('lan-meta').value || 0;
-const m3 = rows.filter(r => r.opps < 3).length;
+const m3 = rows.filter(r => r.opps > 0 && r.opps < 3).length;
 const hoje = new Date();
 const label = String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMonth() + 1).padStart(2, '0');
 const sdrs = rows.filter(r => r.opps > 0).map(r => '- ' + r.nome + ': ' + r.opps).join('\n') || '- (nenhum OPP lançado ainda)';
@@ -599,7 +612,7 @@ return {
 data: hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0'),
 label: String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMonth() + 1).padStart(2, '0'),
 time: t.id,
-registro: { opps: rows.reduce((s, x) => s + (x.opps || 0), 0), atrasos: num('lan-atrasos'), faltas: num('lan-faltas'), grid: num('lan-grid'), forecast: num('lan-forecast'), oppsPlan: num('lan-oppsplan'), corrida: num('lan-corrida'), meta: num('lan-meta'), menos3: rows.filter(x => x.opps < 3).length },
+registro: { opps: rows.reduce((s, x) => s + (x.opps || 0), 0), atrasos: num('lan-atrasos'), faltas: num('lan-faltas'), grid: num('lan-grid'), forecast: num('lan-forecast'), oppsPlan: num('lan-oppsplan'), corrida: num('lan-corrida'), meta: num('lan-meta'), menos3: rows.filter(x => x.opps > 0 && x.opps < 3).length },
 sdrs: rows.map(x => ({ nome: x.nome, opps: x.opps || 0 }))
 };
 }

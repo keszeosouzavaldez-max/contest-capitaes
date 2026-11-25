@@ -562,8 +562,13 @@ const label = String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMon
 const sdrs = rows.filter(r => r.opps > 0).map(r => '- ' + r.nome + ': ' + r.opps).join('\n') || '- (nenhum OPP lançado ainda)';
 return '🏆 CONTEST — ' + label + ' — ' + t.nome + '\nSDRs:\n' + sdrs + '\nAtrasados: ' + a + '\nFaltas: ' + ft + '\nDentro do GRID: ' + g + '\nForecast na plataforma: ' + fc + '\nOPPs plan: ' + op + '\nCorrida da eficiência: ' + ce + '\nMeta do mês batida: ' + mt + '\nSDRs com menos de 3 OPPs: ' + m3;
 }
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHgm26RGJQeo0VKmQ-4ci4wBUBzrdVbduAHSnW6smMdw1dS9cth7Br9-j1qjpnhSLy/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzer92m1KqGOeIFPxuOVm60rC2vQ6wY2RsSog6hvuHp5V5_Ea7dHY1KroZL8VMwv5qqkA/exec';
 let jsonpSeq = 0, dadosAnteriores = '';
+function limpaLabel(v, data){
+const s = String(v || '');
+if (/^\d{1,2}\/\d{1,2}$/.test(s)) return s;
+return String(data || '').slice(8, 10) + '/' + String(data || '').slice(5, 7);
+}
 function aplicaDados(d, live){
 dadosCarregados = true;
 d = d || {};
@@ -574,6 +579,7 @@ dias: (d.dias || []).filter(x => !inicio || String(x.data || '').slice(0, 10) >=
 sdrDiario: (d.sdrDiario || []).filter(x => !inicio || String(x.data || '').slice(0, 10) >= inicio),
 conquistas: d.conquistas || []
 };
+limpo.dias.forEach(function(x){ x.label = limpaLabel(x.label, x.data); });
 const txt = JSON.stringify(limpo);
 if (txt === dadosAnteriores){
 if (live !== false) $('rodape').textContent = 'Gabinete de guerra do comercial · Ao vivo · sincronizado às ' + new Date().toLocaleTimeString('pt-BR') + ' · operado pelo G4 OS';
@@ -743,7 +749,7 @@ if (cache && ((cache.dias||[]).length || (cache.sdrDiario||[]).length || (cache.
 // PWA — instalação como app no celular (GitHub Pages serve por https)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
 (function(){
-var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.2');
+var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.3');
 var st = document.createElement('style'); st.textContent = '#rodape::after{content:" · v" attr(data-v)}'; document.head.appendChild(st);
 window.addEventListener('load', function () {
 navigator.serviceWorker.register('sw.js').then(function (reg) {
@@ -754,7 +760,7 @@ setInterval(function () { try { reg.update(); } catch (e) {} }, 300000);
 navigator.serviceWorker.addEventListener('controllerchange', function () { if (!window._swRecarregou) { window._swRecarregou = true; location.reload(); } });
 setInterval(function () {
 if (window._swRecarregou) return;
-fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.2') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
+fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.3') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
 }, 300000);
 })();
 }

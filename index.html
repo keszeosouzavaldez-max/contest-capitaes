@@ -565,6 +565,7 @@ return '🏆 CONTEST — ' + label + ' — ' + t.nome + '\nSDRs:\n' + sdrs + '\n
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHgm26RGJQeo0VKmQ-4ci4wBUBzrdVbduAHSnW6smMdw1dS9cth7Br9-j1qjpnhSLy/exec';
 let jsonpSeq = 0, dadosAnteriores = '';
 function aplicaDados(d, live){
+dadosCarregados = true;
 d = d || {};
 // Placar 0 a 0 na abertura da temporada: só vale o que for lançado a partir do dia de início
 const inicio = (C.temporada && C.temporada.inicio) || '';
@@ -604,6 +605,7 @@ s.onerror = function () { delete window[cb]; $('rodape').textContent = '⚠️ S
 document.head.appendChild(s);
 setTimeout(function () { if (window[cb]) { delete window[cb]; } }, 15000);
 }
+var dadosCarregados = false;
 function mergeDoDia(t, rows, num){
 const hoje = new Date();
 const hojeISO = hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0');
@@ -644,6 +646,7 @@ sdrs: m.sdrs
 }
 function lanSend(){
 const btn = $('lan-send');
+if (!dadosCarregados){ btn.textContent = '⚠️ Espera os dados do dia carregarem e tenta de novo'; setTimeout(function(){ btn.textContent = '🚀 Lançar no contest'; }, 4000); return; }
 const m = montaPayload();
 const payload = JSON.stringify(m);
 if (window.google && google.script && google.script.run){
@@ -741,7 +744,21 @@ if (cache && ((cache.dias||[]).length || (cache.sdrDiario||[]).length || (cache.
 }catch(e){}
 // PWA — instalação como app no celular (GitHub Pages serve por https)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); });
+(function(){
+var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.1');
+var st = document.createElement('style'); st.textContent = '#rodape::after{content:" · v" attr(data-v)}'; document.head.appendChild(st);
+window.addEventListener('load', function () {
+navigator.serviceWorker.register('sw.js').then(function (reg) {
+try { reg.update(); } catch (e) {}
+setInterval(function () { try { reg.update(); } catch (e) {} }, 300000);
+}).catch(function () {});
+});
+navigator.serviceWorker.addEventListener('controllerchange', function () { if (!window._swRecarregou) { window._swRecarregou = true; location.reload(); } });
+setInterval(function () {
+if (window._swRecarregou) return;
+fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.1') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
+}, 300000);
+})();
 }
 </script>
 </body>

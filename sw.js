@@ -3,7 +3,7 @@
  * Os dados da planilha (JSONP no Apps Script) são sempre buscados na rede;
  * quando não há internet, o app mostra o último estado salvo no aparelho (localStorage).
  */
-const CACHE = 'contest-v1';
+const CACHE = 'contest-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -13,7 +13,8 @@ const ASSETS = [
   './icon-maskable-512.png',
   './apple-touch-icon.png',
   './og-image.jpg',
-  './favicon.svg'
+  './favicon.svg',
+  './versao.txt'
 ];
 
 self.addEventListener('install', (e) => {
@@ -27,6 +28,8 @@ self.addEventListener('activate', (e) => {
       .then(() => self.clients.claim())
   );
 });
+
+self.addEventListener('message', (e) => { if (e.data === 'SKIP_WAITING') self.skipWaiting(); });
 
 self.addEventListener('fetch', (e) => {
   const req = e.request;

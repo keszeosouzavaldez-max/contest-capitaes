@@ -138,6 +138,40 @@ section{margin-top:28px}
 @keyframes blip{0%,20%{opacity:1}60%,100%{opacity:.12}}
 .defcon{font-weight:900;font-size:19px;letter-spacing:.14em;border:2px solid;border-radius:6px;padding:4px 12px}
 .defcon-sub{font-size:10px;letter-spacing:.12em;font-weight:800;text-transform:uppercase}
+/* ===== Linha de frente v2: sala de comando ===== */
+.lado{position:relative}
+.hazard{display:none;position:relative;overflow:hidden;border:1px solid #ffc43d;border-radius:6px;margin:0 2px 8px;height:30px;background:repeating-linear-gradient(45deg,#141005 0 10px,#ffc43d 10px 20px)}
+.hazard.on{display:block}
+.hazard .txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(10,8,2,.84);color:#ffd166;font-size:10.5px;font-weight:900;letter-spacing:.14em;animation:flicker .8s steps(2) infinite;text-transform:uppercase}
+@keyframes flicker{50%{opacity:.5}}
+.arena.sacode{animation:sacode .5s ease}
+@keyframes sacode{0%,100%{transform:translate(0,0)}15%{transform:translate(-4px,2px)}30%{transform:translate(4px,-2px)}45%{transform:translate(-3px,1px)}60%{transform:translate(3px,-1px)}75%{transform:translate(-2px,1px)}}
+.lado.levou{border-color:#ff5a3d;box-shadow:0 0 26px rgba(255,90,61,.45),inset 0 0 22px rgba(255,90,61,.2)}
+.stamp{position:absolute;top:38%;left:50%;transform:translate(-50%,-50%) rotate(-7deg);border:2px solid #ff5a3d;color:#ff7a66;font-size:10px;font-weight:900;letter-spacing:.16em;padding:3px 8px;border-radius:4px;background:rgba(12,14,19,.88);z-index:11;animation:stampIn .25s ease}
+@keyframes stampIn{0%{transform:translate(-50%,-50%) rotate(-7deg) scale(1.9);opacity:0}100%{transform:translate(-50%,-50%) rotate(-7deg) scale(1);opacity:1}}
+.vigneta{position:absolute;inset:0;pointer-events:none;z-index:7;opacity:0;transition:opacity .3s;background:radial-gradient(ellipse at center,transparent 52%,rgba(255,60,40,.32))}
+.scan{position:absolute;inset:0;pointer-events:none;z-index:9;background:repeating-linear-gradient(0deg,rgba(255,255,255,.014) 0 1px,transparent 1px 3px)}
+.camada-frente{position:absolute;inset:0;pointer-events:none;z-index:6;overflow:visible}
+.mis{position:absolute;left:0;top:0;z-index:8;will-change:transform}
+.chama{animation:fogo .12s steps(2) infinite}
+@keyframes fogo{50%{opacity:.35}}
+.dot{position:absolute;width:3px;height:3px;border-radius:50%;background:#ffb36b;opacity:.85;z-index:5;animation:dotF .7s linear forwards}
+@keyframes dotF{to{opacity:0}}
+.flash{position:absolute;width:90px;height:90px;border-radius:50%;background:radial-gradient(circle,#fff,rgba(255,180,80,.55) 40%,transparent 70%);animation:flashF .4s ease-out forwards;z-index:8}
+@keyframes flashF{0%{transform:scale(.2);opacity:1}100%{transform:scale(2.3);opacity:0}}
+.ring{position:absolute;width:64px;height:64px;border:2px solid #ffb36b;border-radius:50%;animation:ringF .85s ease-out forwards;z-index:7}
+@keyframes ringF{0%{transform:scale(.3);opacity:1}100%{transform:scale(3.6);opacity:0}}
+.delta-flut{position:absolute;font-weight:900;font-size:13px;z-index:10;animation:flut 1.6s ease forwards;letter-spacing:.06em}
+@keyframes flut{0%{opacity:0;transform:translateY(6px)}20%{opacity:1}100%{opacity:0;transform:translateY(-24px)}}
+.mapwrap{margin:10px 2px 0}
+.maplabs{display:flex;justify-content:space-between;font-size:9px;font-weight:900;letter-spacing:.18em;margin-bottom:3px}
+.fmap{width:100%;height:44px;display:block;border:1px solid #1e2430;border-radius:6px}
+.tele{margin-top:10px;border:1px solid #1e2430;border-radius:8px;background:#0a0d12;padding:7px 10px;font-size:10px;line-height:1.8;color:#7ec9a2;min-height:78px}
+.tele .t{color:#4a5568}
+.tele .warn{color:#ffd166}
+.tele .bad{color:#ff7a66}
+@media (max-width:640px){.flash{width:70px;height:70px}.hazard .txt{font-size:9px}.tele{font-size:9.5px}}
+@media (prefers-reduced-motion:reduce){.sacode,.stamp,.chama,.hazard .txt{animation:none!important}}
 .intel{font-size:11px;color:var(--tx2);text-align:center;letter-spacing:.04em}
 .vs-x{font-size:26px;font-weight:900;color:var(--tx2);opacity:.75;margin-top:2px}
 .vs-sub{font-size:11px;color:var(--tx2);text-align:center}
@@ -248,12 +282,21 @@ footer{margin-top:44px;text-align:center;color:var(--tx2);font-size:12px}
 </section>
 <section>
 <div class="titulo-secao">Frente de batalha</div>
+<div class="hazard" id="hazard"><div class="txt"></div></div>
 <div class="arena" id="arena">
 <div class="lado" id="lado-esq"></div>
 <div class="meio" id="meio"></div>
 <div class="lado" id="lado-dir"></div>
 <div class="missil"><svg viewBox="0 0 40 96"><path d="M20 0 C26 10 28 22 28 34 L28 60 C28 68 24 74 20 82 C16 74 12 68 12 60 L12 34 C12 22 14 10 20 0 Z" fill="#c8ccd6"/><path d="M12 42 L2 54 L12 54 Z" fill="#8e1616"/><path d="M28 42 L38 54 L28 54 Z" fill="#8e1616"/><circle cx="20" cy="30" r="5" fill="#5a6070"/><path d="M15 82 L13 95 M25 82 L27 95" stroke="#ff9d2e" stroke-width="4" opacity=".85"/></svg></div>
+<div class="vigneta" id="vigneta"></div>
+<div class="scan"></div>
+<div class="camada-frente" id="camada-frente"></div>
 </div>
+<div class="mapwrap">
+<div class="maplabs"><span id="map-esq"></span><span id="map-dir"></span></div>
+<svg class="fmap" viewBox="0 0 1000 44" preserveAspectRatio="none"><rect x="0" y="0" width="1000" height="44" fill="#0d1017"/><line x1="200" y1="0" x2="200" y2="44" stroke="#1a2130" stroke-dasharray="3 6"/><line x1="400" y1="0" x2="400" y2="44" stroke="#1a2130" stroke-dasharray="3 6"/><line x1="600" y1="0" x2="600" y2="44" stroke="#1a2130" stroke-dasharray="3 6"/><line x1="800" y1="0" x2="800" y2="44" stroke="#1a2130" stroke-dasharray="3 6"/><rect x="0" y="0" width="500" height="44" fill="#4f7bff" opacity=".07"/><rect x="500" y="0" width="500" height="44" fill="#e04343" opacity=".07"/><g id="frente" style="transition:transform 1.2s cubic-bezier(.55,.1,.25,1)"><path d="M500 0 L491 7 L507 15 L492 23 L505 31 L493 37 L500 44" stroke="#ffc43d" stroke-width="2.4" fill="none" opacity=".22" transform="translate(3 0)"/><path d="M500 0 L491 7 L507 15 L492 23 L505 31 L493 37 L500 44" stroke="#ffc43d" stroke-width="1.6" fill="none"/><circle cx="500" cy="22" r="3.4" fill="none" stroke="#ffc43d" stroke-width="1.4"/><line x1="495" y1="17" x2="505" y2="27" stroke="#ffc43d" stroke-width="1.2"/><line x1="505" y1="17" x2="495" y2="27" stroke="#ffc43d" stroke-width="1.2"/></g></svg>
+</div>
+<div class="tele" id="tele"></div>
 </section>
 <section>
 <div class="titulo-secao">Cronologia da guerra</div>
@@ -406,6 +449,77 @@ ${dia ? `<div class="hoje">
 </div>` : '<div class="hoje-vazio">Nenhum combate registrado. A guerra começa em 25/11.</div>'}
 </div>` + BOMBA_SVG;
 }
+// ===== Linha de frente v2: sala de comando =====
+var memoriaFrente = null;
+var REDUZ = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+var SVG_MIS = '<svg width="52" height="16" viewBox="0 0 52 16"><path d="M2 8 L11 4.6 L11 11.4 Z" fill="#ff9d2e" class="chama"/><rect x="10" y="5.8" width="23" height="4.4" rx="2.2" fill="#aeb8cc"/><path d="M15 5.8 L10 1 L14.5 5.8 Z M15 10.2 L10 15 L14.5 10.2 Z" fill="#7e8aa0"/><path d="M33 2.6 L45 8 L33 13.4 Z" fill="#d5dce8"/><circle cx="29" cy="8" r="1.5" fill="#5a6070"/></svg>';
+function agoraHora(){ const d = new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2)+':'+('0'+d.getSeconds()).slice(-2); }
+function teleLog(txt, cls){
+const t = $('tele'); if (!t) return;
+const l = document.createElement('div');
+l.innerHTML = '<span class="t">[' + agoraHora() + ']</span> <span class="' + (cls||'') + '">' + txt + '</span>';
+t.appendChild(l);
+while (t.children.length > 4) t.removeChild(t.firstChild);
+}
+function alertaFrente(txt){
+const h = $('hazard'); if (!h) return;
+h.querySelector('.txt').textContent = txt;
+h.classList.add('on');
+setTimeout(function(){ h.classList.remove('on'); }, 6000);
+}
+function voarFrente(dir, qtd, alvoId){
+const cam = $('camada-frente'); if (!cam) return;
+const r = cam.getBoundingClientRect();
+for (let i = 0; i < qtd; i++){
+(function(idx){ setTimeout(function(){ voarUm(cam, dir, r, 0.36 + idx * 0.09, alvoId); }, idx * 480); })(i);
+}
+}
+function voarUm(cam, dir, r, fY, alvoId){
+const m = document.createElement('div'); m.className = 'mis'; m.innerHTML = SVG_MIS;
+cam.appendChild(m);
+const yF = r.height * fY, dur = 1050, t0 = performance.now(); let lastDot = 0;
+function fr(t){
+const p = Math.min(1, (t - t0) / dur);
+const x = dir === 'd2e' ? (-40 + p * (r.width + 80)) : (r.width + 40 - p * (r.width + 80));
+const y = yF - Math.sin(p * Math.PI) * r.height * 0.20;
+const ang = dir === 'd2e' ? (-22 * Math.cos(p * Math.PI)) : (180 + 22 * Math.cos(p * Math.PI));
+m.style.transform = 'translate(' + x + 'px,' + y + 'px) rotate(' + ang + 'deg)';
+if (t - lastDot > 24){ lastDot = t; const d = document.createElement('div'); d.className = 'dot'; d.style.left = x + 'px'; d.style.top = y + 'px'; cam.appendChild(d); setTimeout(function(){ d.remove(); }, 700); }
+if (p < 1) requestAnimationFrame(fr); else { m.remove(); detonar(x, y, alvoId); }
+}
+requestAnimationFrame(fr);
+}
+function detonar(x, y, alvoId){
+const cam = $('camada-frente'); if (!cam) return;
+const f = document.createElement('div'); f.className = 'flash'; f.style.left = (x - 45) + 'px'; f.style.top = (y - 45) + 'px'; cam.appendChild(f); setTimeout(function(){ f.remove(); }, 450);
+for (let j = 0; j < 2; j++){
+(function(k){ const r2 = document.createElement('div'); r2.className = 'ring'; r2.style.left = (x - 32) + 'px'; r2.style.top = (y - 32) + 'px'; r2.style.animationDelay = (k * 0.12) + 's'; cam.appendChild(r2); setTimeout(function(){ r2.remove(); }, 1100 + k * 120); })(j);
+}
+const ab = document.getElementById('arena'); if (ab){ ab.classList.remove('sacode'); void ab.offsetWidth; ab.classList.add('sacode'); }
+const v = $('vigneta'); if (v){ v.style.opacity = 1; setTimeout(function(){ v.style.opacity = 0; }, 420); }
+const card = document.getElementById(alvoId);
+if (card){
+card.classList.remove('levou'); void card.offsetWidth; card.classList.add('levou');
+const st = document.createElement('div'); st.className = 'stamp'; st.textContent = 'IMPACTO CONFIRMADO'; card.appendChild(st);
+setTimeout(function(){ st.remove(); card.classList.remove('levou'); }, 1700);
+}
+teleLog('IMPACTO CONFIRMADO · ALVO: ' + (alvoId === 'lado-esq' ? C.times[0].nome : C.times[1].nome).toUpperCase(), 'bad');
+}
+function flutuarFrente(timeIdx, dlt){
+if (!dlt) return;
+const cam = $('camada-frente'); if (!cam) return;
+const t = C.times[timeIdx];
+const f = document.createElement('div'); f.className = 'delta-flut'; f.style.color = t.cor;
+f.style[timeIdx === 0 ? 'left' : 'right'] = '10%'; f.style.top = '24%';
+f.textContent = (dlt > 0 ? '▲ +' : '▼ ') + dlt + ' OPPs';
+cam.appendChild(f);
+setTimeout(function(){ f.remove(); }, 1700);
+}
+function frenteFase(liderIdx, dif){
+const frente = document.getElementById('frente'); if (!frente) return;
+const k = (liderIdx === null) ? 0 : (liderIdx === 0 ? 1 : -1) * Math.min(60, dif * 3);
+frente.style.transform = 'translateX(' + k + 'px)';
+}
 function renderArena(){
 const [t1, t2] = C.times;
 const a = totalGeral(t1.id), b = totalGeral(t2.id);
@@ -431,6 +545,33 @@ $('meio').innerHTML = `<div class="radar"><div class="sweep"></div><div class="b
 <div class="vs-x">VS</div>
 <div class="intel">${empate ? 'Fronte congelada' : 'Intel: ' + lider.nome + ' na frente ' + fmt(lider === t1 ? a - b : b - a)}</div>
 <div class="vs-sub">${nDias} ${nDias === 1 ? 'dia de combate' : 'dias de combate'}</div>`;
+// ===== Linha de frente v2: mapa, telemetria e eventos =====
+$('map-esq').innerHTML = '◤ <span style="color:' + t1.cor + '">' + t1.nome.toUpperCase() + '</span>';
+$('map-dir').innerHTML = '<span style="color:' + t2.cor + '">' + t2.nome.toUpperCase() + '</span> ◤';
+const lidIdx = lider === t1 ? 0 : lider === t2 ? 1 : null;
+frenteFase(lidIdx, diff);
+if (memoriaFrente && memoriaFrente.teveDados && nDias > 0){
+const dM = a - memoriaFrente.i0, dI = b - memoriaFrente.i1;
+if (memoriaFrente.lid !== lidIdx){
+if (lider) alertaFrente('▲▲ ALERTA VERMELHO · ' + lider.nome.toUpperCase() + ' ASSUME A FRENTE ▲▲');
+else alertaFrente('// FRENTE CONGELADA · EQUILÍBRIO DE FORÇAS //');
+teleLog(lider ? 'MUDANÇA DE COMANDO · ' + lider.nome.toUpperCase() + ' ASSUME A FRENTE' : 'EQUILÍBRIO DE FORÇAS · FRENTE CONGELADA', 'warn');
+}
+if (dM !== 0 || dI !== 0){
+let dir = null, ganho = 0, alvoId = null, quem = 0;
+if (dM > dI){ dir = 'd2e'; ganho = dM; alvoId = 'lado-dir'; quem = 0; }
+else if (dI > dM){ dir = 'e2d'; ganho = dI; alvoId = 'lado-esq'; quem = 1; }
+if (dir && ganho !== 0){
+const qtd = Math.max(1, Math.min(3, Math.round(Math.abs(ganho) / 3)));
+flutuarFrente(quem, ganho);
+teleLog(ganho > 0 ? 'LANÇAMENTO: ' + C.times[quem].nome.toUpperCase() + ' · MÍSSIL EM ROTA (' + qtd + ')' : 'CORREÇÃO REGISTRADA · ' + C.times[quem].nome.toUpperCase() + ' ' + ganho + ' PTS');
+if (ganho > 0 && !REDUZ) voarFrente(dir, qtd, alvoId);
+}
+}
+} else if (!memoriaFrente){
+teleLog('SISTEMA TÁTICO ONLINE · TELEMETRIA ATIVA');
+}
+memoriaFrente = { i0: a, i1: b, lid: lidIdx, teveDados: nDias > 0 };
 }
 function renderChart(){
 const dias = C.dias || [];
@@ -749,7 +890,7 @@ if (cache && ((cache.dias||[]).length || (cache.sdrDiario||[]).length || (cache.
 // PWA — instalação como app no celular (GitHub Pages serve por https)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
 (function(){
-var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.3');
+var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.4');
 var st = document.createElement('style'); st.textContent = '#rodape::after{content:" · v" attr(data-v)}'; document.head.appendChild(st);
 window.addEventListener('load', function () {
 navigator.serviceWorker.register('sw.js').then(function (reg) {
@@ -760,7 +901,7 @@ setInterval(function () { try { reg.update(); } catch (e) {} }, 300000);
 navigator.serviceWorker.addEventListener('controllerchange', function () { if (!window._swRecarregou) { window._swRecarregou = true; location.reload(); } });
 setInterval(function () {
 if (window._swRecarregou) return;
-fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.3') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
+fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.4') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
 }, 300000);
 })();
 }

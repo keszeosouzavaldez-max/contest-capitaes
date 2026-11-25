@@ -635,26 +635,25 @@ const t = C.times.find(x => x.id === $('lan-time').value) || C.times[0];
 const hoje = new Date();
 const rows = lanSdrRows();
 const num = id => +$(id).value || 0;
-const m = mergeDoDia(t, rows, num);
 return {
-data: m.hojeISO,
+modo: 'somar',
+data: hoje.getFullYear() + '-' + String(hoje.getMonth() + 1).padStart(2, '0') + '-' + String(hoje.getDate()).padStart(2, '0'),
 label: String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMonth() + 1).padStart(2, '0'),
 time: t.id,
-registro: m.registro,
-sdrs: m.sdrs
+registro: { opps: rows.reduce((s, x) => s + (x.opps || 0), 0), atrasos: num('lan-atrasos'), faltas: num('lan-faltas'), grid: num('lan-grid'), forecast: num('lan-forecast'), oppsPlan: num('lan-oppsplan'), corrida: num('lan-corrida'), meta: num('lan-meta'), menos3: rows.filter(x => x.opps > 0 && x.opps < 3).length },
+sdrs: rows.map(x => ({ nome: x.nome, opps: x.opps || 0 }))
 };
 }
 function lanSend(){
 const btn = $('lan-send');
 if (!dadosCarregados){ btn.textContent = '⚠️ Espera os dados do dia carregarem e tenta de novo'; setTimeout(function(){ btn.textContent = '🚀 Lançar no contest'; }, 4000); return; }
-const m = montaPayload();
-const payload = JSON.stringify(m);
+const payload = JSON.stringify(montaPayload());
 if (window.google && google.script && google.script.run){
 btn.disabled = true; btn.textContent = '🚀 Lançando...';
 try{
 google.script.run
-.withSuccessHandler(function(){
-btn.textContent = '✅ Somado! Total do dia: ' + m.registro.opps + ' OPPs';
+.withSuccessHandler(function(ret){
+btn.textContent = '✅ ' + (ret || 'Lançado! A planilha somou');
 setTimeout(function(){ btn.textContent = '🚀 Lançar no contest'; btn.disabled = false; }, 3000);
 })
 .withFailureHandler(function(err){
@@ -669,7 +668,7 @@ setTimeout(function(){ btn.textContent = '🚀 Lançar no contest'; btn.disabled
 return;
 }
 window.open(APPS_SCRIPT_URL + '?action=lanca&payload=' + encodeURIComponent(payload), '_blank');
-btn.textContent = '✅ Somado! Dia: ' + m.registro.opps + ' OPPs · fecha a aba aberta';
+btn.textContent = '✅ Lançado! A planilha somou — confere a frente de batalha';
 setTimeout(() => { btn.textContent = '🚀 Lançar no contest'; }, 3500);
 }
 function resumoLancamento(){
@@ -678,11 +677,10 @@ const rows = lanSdrRows();
 const num = id => +$(id).value || 0;
 const hoje = new Date();
 const label = String(hoje.getDate()).padStart(2, '0') + '/' + String(hoje.getMonth() + 1).padStart(2, '0');
-const m = mergeDoDia(t, rows, num);
-return 'CONTEST ' + label + ' — ' + t.nome + ' (acumulado do dia)\n' +
-'OPPs: ' + (m.sdrs.filter(x => x.opps > 0).map(x => x.nome + ' ' + x.opps).join(', ') || '(nenhum)') + '\n' +
-'Atrasados: ' + m.registro.atrasos + ' · Faltas: ' + m.registro.faltas + ' · GRID: ' + m.registro.grid + '\n' +
-'Forecast: ' + m.registro.forecast + ' · OPPs plan: ' + m.registro.oppsPlan + ' · Corrida: ' + m.registro.corrida + ' · Meta batida: ' + m.registro.meta;
+return 'CONTEST ' + label + ' — ' + t.nome + ' (lançamento)\n' +
+'OPPs: ' + rows.map(x => (x.nome || 'SDR') + ' ' + (x.opps || 0)).join(', ') + '\n' +
+'Atrasados: ' + num('lan-atrasos') + ' · Faltas: ' + num('lan-faltas') + ' · GRID: ' + num('lan-grid') + '\n' +
+'Forecast: ' + num('lan-forecast') + ' · OPPs plan: ' + num('lan-oppsplan') + ' · Corrida: ' + num('lan-corrida') + ' · Meta batida: ' + num('lan-meta');
 }
 async function lanCopy(){
 const btn = $('lan-copy');
@@ -745,7 +743,7 @@ if (cache && ((cache.dias||[]).length || (cache.sdrDiario||[]).length || (cache.
 // PWA — instalação como app no celular (GitHub Pages serve por https)
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
 (function(){
-var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.1');
+var rEl = document.getElementById('rodape'); if (rEl) rEl.setAttribute('data-v', '2.2');
 var st = document.createElement('style'); st.textContent = '#rodape::after{content:" · v" attr(data-v)}'; document.head.appendChild(st);
 window.addEventListener('load', function () {
 navigator.serviceWorker.register('sw.js').then(function (reg) {
@@ -756,7 +754,7 @@ setInterval(function () { try { reg.update(); } catch (e) {} }, 300000);
 navigator.serviceWorker.addEventListener('controllerchange', function () { if (!window._swRecarregou) { window._swRecarregou = true; location.reload(); } });
 setInterval(function () {
 if (window._swRecarregou) return;
-fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.1') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
+fetch('versao.txt?_=' + Date.now()).then(function (r) { return r.text(); }).then(function (v) { v = (v || '').trim(); if (v && v !== '2.2') { window._swRecarregou = true; location.reload(); } }).catch(function () {});
 }, 300000);
 })();
 }

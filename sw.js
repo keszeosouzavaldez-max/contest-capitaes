@@ -2,8 +2,10 @@
  * Guarda a casca do app (HTML/ícones) para abrir offline.
  * Os dados da planilha (JSONP no Apps Script) são sempre buscados na rede;
  * quando não há internet, o app mostra o último estado salvo no aparelho (localStorage).
+ * IMPORTANTE: a cada release do app, mude o CACHE abaixo (ex.: contest-v2.5)
+ * para forçar a reinstalação do SW em todos os aparelhos.
  */
-const CACHE = 'contest-v2';
+const CACHE = 'contest-v2.5';
 const ASSETS = [
   './',
   './index.html',

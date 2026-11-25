@@ -5,7 +5,7 @@
  * IMPORTANTE: a cada release do app, mude o CACHE abaixo (ex.: contest-v2.5)
  * para forçar a reinstalação do SW em todos os aparelhos.
  */
-const CACHE = 'contest-v2.5';
+const CACHE = 'contest-v2.7';
 const ASSETS = [
   './',
   './index.html',
